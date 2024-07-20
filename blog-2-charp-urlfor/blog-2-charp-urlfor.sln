@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34408.163
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "blog-2-charp-urlfor", "blog-2-charp-urlfor\blog-2-charp-urlfor.csproj", "{70ABA853-014B-4461-BAAF-6AB190A991B2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70ABA853-014B-4461-BAAF-6AB190A991B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70ABA853-014B-4461-BAAF-6AB190A991B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70ABA853-014B-4461-BAAF-6AB190A991B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70ABA853-014B-4461-BAAF-6AB190A991B2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46569267-B5FD-4FB1-A7B5-BC903BCA36F7}
+	EndGlobalSection
+EndGlobal

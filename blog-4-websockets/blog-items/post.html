@@ -1,0 +1,153 @@
+    <p>Please find the code sample <a target="_blank" rel="noopener noreferrer" href="https://github.com/art3xias23/blog-4-websockets">here.</a></p>
+    <p>&nbsp;</p>
+    <p>A WebSocket is a lightweight communication protocol which allows for a bidirectional streaming of information.</p>
+    <p>&nbsp;</p>
+    <figure class="image image_resized" style="width:90.98%;"><img style="aspect-ratio:1660/1359;" src="https://i.imgur.com/n9bIOgy.png" width="1660" height="1359"></figure>
+    <p>&nbsp;</p>
+    <h4>HTTP</h4>
+    <p>&nbsp;</p>
+    <p>In the above example you can see how an HTTP handshake works in comparison to a WebSocket one.</p>
+    <p>&nbsp;</p>
+    <p>The HTTP handshake consists of the client sending a request to a server which consists of an HTTP Method, Headers, and potentially a request body.</p>
+    <p>The server responds with an HTTP Response code (200, 400), Headers, and a body.</p>
+    <p>&nbsp;</p>
+    <h4>WebSocket</h4>
+    <p>The WebSocket handshake is a bit more complex.</p>
+    <p>&nbsp;</p>
+    <p>The client sends an HTTP request with headers:</p>
+    <ul>
+        <li>Upgrade: websocket
+            <ul>
+                <li>This header informs the server that the connection is to be upgraded from HTTP to WebSocket protocol.</li>
+            </ul>
+        </li>
+        <li">Connection: Upgrade
+            <ul style=>
+                <li>Reinforces the upgrade request</li>
+            </ul>
+        </li>
+        <li>Sec-WebSocket-Key: A Base64-encoded random value
+            <ul>
+                <li>The server will use this in order to validate the secure connection</li>
+            </ul>
+        </li>
+        <li>Sec-WebSocket-Version:
+            <ul>
+                <li>The version of the protocol to be used.</li>
+            </ul>
+        </li>
+    </ul>
+    <p>&nbsp;</p>
+    <p>The server responds with</p>
+    <ul>
+        <li>HTTP 101 Switching Protocols status code if it supports WebSockets and agrees to establish a connection</li>
+        <li>Upgrade: websocket
+            <ul>
+                <li>Confirming the upgrade of the connection</li>
+            </ul>
+        </li>
+        <li>Connection: Upgrade
+            <ul>
+                <li>Confirming the upgrade</li>
+            </ul>
+        </li>
+        <li>Sec-WebSocket-Accept:
+            <ul>
+                <li>A hashed and base64-encoded version of the <code>Sec-WebSocket-Key</code> sent by the client, ensuring that the server is genuine and that the handshake process is secure.</li>
+            </ul>
+        </li>
+    </ul>
+    <p>At this point, if the server agrees to establish a connection, the initial HTTP connection evolves to a persistent WebSocket one, which allows bi-directional communication.</p>
+    <p>&nbsp;</p>
+    <h4>Code Sample</h4>
+    <p>&nbsp;</p>
+    <p>In our example, we have ws.html (client) and ws.js (server).</p>
+    <p>&nbsp;</p>
+    <h4>Client</h4>
+    <p>The client sends an HTTP request to the server.</p>
+    <p>&nbsp;</p>
+    <div style="background-color: lightgray; padding: 10px;">
+        <pre><code class="language-javascript">const ws = new WebSocket("http://localhost:3000")</code></pre>
+    </div>
+    <p>If the server agrees, it upgrades the connection from HTTP to WebSocket.</p>
+    <p>This triggers the server's connection event</p>
+    <div class="code">
+        <pre><code class="language-javascript">wss.on('connection', (ws) =&gt; {
+    console.log("Client connected");
+    ws.on("message", (message) =&gt; {
+        console.log(`Received: ${message}`);
+        ws.send(`Echo: ${message}`);
+    });
+});</code></pre>
+    </div>
+    <p>Next, after the server has confirmed that the connection has been opened, we trigger the analogous event on the client to signify that the client has received confirmation of the open connection.</p>
+    <p>&nbsp;</p>
+    <div class="code">
+        <pre><code class="language-javascript">ws.onopen = () =&gt;{
+    console.log("Connected to WS server");
+}</code></pre>
+    </div>
+    <p>Since WebSockets are bi-directional, let's show how that would work.</p>
+    <p>&nbsp;</p>
+    <p>We have a send button on our client which will send the contents of the input field to the server.</p>
+    <p>&nbsp;</p>
+    <div class="code">
+        <pre><code class="language-javascript">const sendButton = document.getElementById("btnSend");
+sendButton.addEventListener('click', () =&gt; {
+    const input = document.getElementById("inputMessage");
+    const message = input.value;
+    ws.send(message);
+    input.value = '';
+});</code></pre>
+    </div>
+    <p>The server will receive the information and echo it back to the client</p>
+    <p>&nbsp;</p>
+    <div class="code">
+        <pre><code class="language-javascript">ws.on("message", (message) =&gt; {
+    console.log(`Received: ${message}`);
+    ws.send(`Echo: ${message}`);
+});</code></pre>
+    </div>
+    <p>The client will receive the WebSocket communication and display it on a new div</p>
+    <p>&nbsp;</p>
+    <div class="code">
+        <pre><code class="language-javascript">ws.onmessage = (event) =&gt; {
+    const data  = event.data;
+    const output = document.getElementById("output");
+    const newDiv = document.createElement("div");
+    newDiv.textContent = data;
+    output.appendChild(newDiv);
+};</code></pre>
+    </div>
+    <p>All in all, WebSockets are a lightweight communication protocol which allows for a bi-directional streaming of data between a client and a server. To emphasize the lightweight, let's compare an HTTP request with a WebSocket frame (request).</p>
+    <p>&nbsp;</p>
+    <h5>WebSocket</h5>
+    <p>&nbsp;</p>
+    <div class="code">
+        <pre><code class="language-plaintext">[FIN][RSV1][RSV2][RSV3][Opcode][Mask][Payload length][Payload data]</code></pre>
+    </div>
+    <h5>HTTP</h5>
+    <p>&nbsp;</p>
+    <p>Request</p>
+    <div class="code">
+        <pre><code class="language-plaintext">GET /path/resource HTTP/1.1
+Host: example.com
+User-Agent: Mozilla/5.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1</code></pre>
+    </div>
+    <p>Response</p>
+    <div class="code">
+        <pre><code class="language-plaintext">HTTP/1.1 200 OK
+Date: Mon, 23 Jul 2021 16:00:00 GMT
+Server: Apache/2.4.1 (Unix)
+Last-Modified: Wed, 22 Jul 2021 19:15:56 GMT
+Content-Length: 44
+Content-Type: text/html
+Connection: Closed</code></pre>
+    </div>
+
+

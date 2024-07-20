@@ -1,0 +1,63 @@
+
+
+<p>Today I was travelling away from home.</p>
+<br>
+<p>As usual, I packed a bag with my keyboard, laptop, hub and mouse. I didn't
+get to open the bag on my arrival</p>
+<br>
+<p>In the morning I had some business to tend to prior to me starting my
+workday</p>
+<br>
+<p>By the time I arrived home after my errands I saw I had only a minute before
+my morning stand up with my team<p>
+<br>
+<p>As I was pulling my charger from my bag it had unfortunatelly tangled up with
+my keyboard's usb-c cable.</p>
+<br>
+<p>The usb port on the left side of my keyboard, which is the master side was no
+longer working<p> 
+<br>
+<p>Funnily, connecting the cable to the right side was working, however the
+sides were mirrored. Nevertheless, that told me that the issue was in the usb
+port and not the Elite-C microcontroller</p>
+<br>
+<p>Took me a couple of hours but I finally ended up fixing my issue</p>
+<br>
+<p>I am on a Windows 10 machine and I followed the qmk guide: https://docs.qmk.fm/newbs_getting_started</p>
+<br>
+<ol>
+<li>Downloaded qmk msys.</li>
+<br>
+<li>Ran qmk setup.</li>
+
+<br>
+<li>Generated my own set of config.h and keymap.c files by following the guide on the qmk website</li>
+
+<br>
+<li>Previously I used <a href=https://config.qmk.fm/#/oddball/v2_1/LAYOUT>Layout</a> in order to generate a .JSON and a .hex file. So now I used <a href=https://jhelvy.shinyapps.io/qmkjsonconverter/>this</a> to convert my pre-existing JSON to a .c file (old_json_file.c)</li>
+
+<br>
+<li>Replace the new keymap.c file contents with the contents from old_json_file.c</li>
+
+<br>
+<li>As suggested in config.h I commented out</li>
+
+<br>
+<b>// #define MASTER_LEFT</b>
+<br>
+<br>
+and uncommented 
+<br>
+<br>
+<b>#define MASTER_RIGHT</b>
+<br>
+<br>
+
+<li>I ran qmk compile which generated a new .hex file for me</li>
+
+<br>
+<li>Opened qmk toolbox. Opened the hex file inside it. Inserted the usb c cable into the right keyboard. Hit the reset button and viola.</li>
+
+<br>
+<li>Just to confirm I did not need to flash the left side, flashing only the right side got both halves working. (edited)</li>
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>EventSource Demo</title>
+</head>
+
+<body>
+	<h1>Server-Sent Events Demo</h1>
+
+	<button id="btn-close">Close</button>
+	<button id="btn-open">Open</button>
+
+	<div id="output"></div>
+	<script>
+		let eventSource;
+		function openEventSource() {
+
+			eventSource = new EventSource('/sse');
+			eventSource.onmessage = function (event) {
+				const newElement = document.createElement("div");
+				newElement.innerHTML = "New event: " + event.data;
+				document.getElementById("output").appendChild(newElement);
+			}
+
+			eventSource.onerror = function(evt){
+				console.log("EventSource error: ", evt);
+				console.log("Closing event source");
+				eventSource.close()
+			}
+		};
+
+		const close_button = document.getElementById('btn-close');
+		close_button.addEventListener("click", function () {
+			console.log("Closing event source")
+			eventSource?.close();
+		});
+
+		const open_button = document.getElementById('btn-open');
+		open_button.addEventListener("click", function () {
+			if(!eventSource || eventSource.readyState === EventSource.CLOSED){
+
+				console.log("Opening event source");
+				openEventSource()
+				
+			}
+			else{
+				console.log("Event source already opened");
+			}
+		});
+
+
+	</script>
+</body>
+
+</html>

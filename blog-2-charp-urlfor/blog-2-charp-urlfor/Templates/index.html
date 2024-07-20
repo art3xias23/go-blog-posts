@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Updates</title>
+</head>
+<body>
+    <div id="questions"></div>
+    <script>
+    const eventSource = new EventSource('/events');
+
+        eventSource.onmessage = function (event) {
+            const data = event.data;
+            const questionsDiv = document.getElementById('questions');
+
+            if (data.startsWith('<script>')) {
+                const script = document.createElement('script');
+                script.textContent = data.substring(8, data.length - 9); // Remove <script> tags
+                document.body.appendChild(script);
+            } else {
+                const div = document.createElement('div');
+                div.innerHTML = data;
+                questionsDiv.appendChild(div);
+            }
+        };
+
+        eventSource.addEventListener('end', function (event) {
+            eventSource.close();
+            console.log('Event stream closed.');
+        });
+    </script>
+</body>
+</html>

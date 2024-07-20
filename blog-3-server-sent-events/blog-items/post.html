@@ -1,0 +1,64 @@
+<p>Please refer to the code sample <a target="_blank" rel="noopener noreferrer" href="https://github.com/art3xias23/blog-3-event-source-websockets">here</a>.</p>
+<p>&nbsp;</p>
+<p>Let's start by figuring out what SSE's are.</p>
+<br>
+<p>Server-sent-events are</p>
+<br>
+<ul>
+    <li>Persistent HTTP connections</li>
+    <li>A special MIME type <i>text/event-stream</i></li>
+    <li>A software that provides access to the EventSource API</li>
+</ul>
+<br>
+<p>These three conditions set up a uni-directional stream of data. <i><strong>From server to client.</strong></i></p>
+<br>
+<p>In our client, we would use the EventSource API and establish a connection to the server.&nbsp;</p>
+<br>
+<pre><code class="language-javascript">	eventSource = new EventSource('/sse');
+			eventSource.onmessage = function (event) {
+				const newElement = document.createElement("div");
+				newElement.innerHTML = "New event: " + event.data;
+				document.getElementById("output").appendChild(newElement);
+			}
+</code></pre>
+<br>
+<p>Each time we receive data from the server we create a new div and update it's innerHtml with the contents from the sse update.</p>
+<br>
+<p>We have hidden the above functionality behind a button on our UI. As soon as we click on the ‘Open’ button we open the connection to the ‘/sse’ endpoint on the server and the data streaming begins.&nbsp;</p>
+<br>
+<pre><code class="language-javascript">app.get('/sse', (req, res) =&gt; {
+	res.setHeader('Content-Type', 'text/event-stream');
+	res.setHeader('Cache-Control', 'no-cache');
+	res.setHeader('Connection', 'keep-alive');
+
+	const intervalId = setInterval(() =&gt; {
+		counter++;
+		res.write(`data: ${counter}\n\n`);
+	}, 1000)
+})</code></pre>
+<br>
+<p>There are three headers which are specific to SSE</p>
+<br>
+<ul>
+    <li>‘Content-Type’, ‘text/event-stream’<ul>
+            <li>The event scream functionality will cease as the browser will not know that is has to parse a scream of events based on the MIME type.</li>
+        </ul>
+    </li>
+<br>
+<br>
+    <li>‘Cache-Control’, ‘no-cache’<ul>
+            <li><i><strong>no-cache</strong> is not <strong>no-store</strong></i></li>
+            <li><i><strong>no-cache </strong></i>caches the response on the server. Next time when the browser requests the same content, the browser will send a ‘If-Modified-Since’ header to the server. The server will respond with either 200 (where the browser will update it's cache with the updated content) or with a 304 Not Modified.(where the browser will serve the cached content).</li>
+            <li>In SSE we use no-cache. The reason is when an ongoing connection is interrupted and then reestablished, the browser will validate with the server the cached information, thus establishing where it stopped, and start receiving new events, thus overwriting the older cache.</li>
+            <li>When restablishing connection the browser will send a ‘Last-Event-ID' header to the browser, indicating the last event it received. This assists the server to start sending only events which have occurred after the ‘Last-Event-ID’.&nbsp;</li>
+            <li>No-Cache also saves information temporarily, thus not straining browser resources.</li>
+        </ul>
+    </li>
+<br>
+<br>
+    <li>‘Connection’, ‘keep-alive’<ul>
+            <li>We don't want the overhead of opening and closing a connection each time a request/response is made. We want to keep the connection open and reuse it until the communication between the server and client has finished.</li>
+        </ul>
+    </li>
+</ul>
+
