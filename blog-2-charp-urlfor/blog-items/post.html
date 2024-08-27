@@ -1,0 +1,210 @@
+<p>Up to this point I was working on a website which utilized:</p>
+<ul>
+    <li><a href="https://github.com/scriban/scriban">Scriban</a> for dynamic content generation and template reusability</li>
+    <li><a href="https://htmx.org/">HTMX</a> for the front end</li>
+    <li>CSharp minimal API for the backend</li>
+</ul>
+<br>
+<br>
+<p>For example, here is a simple GET /Example endpoint:</p>
+<blockquote>
+<pre>
+<code>
+app.MapGet("/Example", (ITemplateParser parser) =&gt;
+{
+    var name = "Victor";
+    var template = "&lt;p&gt;My name is {{name}}&lt;/p&gt;";
+    var templateText = parser.Render(new { name = "Tino" }, template);
+    return templateText;
+});
+</code>
+</pre>
+</blockquote>
+
+<p>This is my Render method:</p>
+
+<blockquote>
+<pre>
+<code>
+public string Render(object model, string filePath)
+{
+    var template = Template.Parse(filePath);
+
+    var context = new TemplateContext
+    {
+        MemberRenamer = member =&gt; member.Name
+    };
+    var scriptObject = new ScriptObject();
+
+    if (model != null)
+    {
+        scriptObject.Import(model);
+        context.PushGlobal(scriptObject);
+    }
+
+    return template.Render(context);
+}
+</code>
+</pre>
+</blockquote>
+
+<p>Nothing too complicated here. We push the model onto the Scriban context and render the template.</p>
+
+<p>Now, imagine if we need to create a link. How would that endpoint look?</p>
+
+<blockquote>
+<pre>
+<code>
+app.MapGet("/ExampleUrl", (ITemplateParser parser, HttpContext context) =&gt;
+{
+    var template = $"&lt;a href=&quot;/examples/{23}&quot;&gt;Hardcoded url&lt;/a&gt;";
+    var templateText = parser.Render(new { }, template);
+    context.Response.ContentType = "text/html";
+    context.Response.WriteAsync(templateText);
+});
+</code>
+</pre>
+</blockquote>
+
+<p>As you can see, we need to hardcode the URL.</p>
+<p>I see two issues with this:</p>
+<ul>
+    <li>If we have 30 links in our codebase and we decide to change the URL, we would need to make 30 changes.</li>
+    <li>If we have 50 endpoints, it could become cumbersome to remember all of them and search the codebase by the endpoint notation.</li>
+</ul>
+
+<p>We can resolve the above by providing a friendly name to our endpoint, which we would then use to dynamically generate the real endpoint.</p>
+
+<p>In Python's Flask, we have a similar concept called <i>url_for</i>. Here we have an example of a Flask endpoint:</p>
+
+<blockquote>
+<pre>
+<code>
+@app.route('/cricket/&lt;favteam&gt;')
+def cricket(favteam):
+    return render_template('cricket.html', fav=favteam)
+</code>
+</pre>
+</blockquote>
+
+<p>And here is the example of the <i>url_for</i>:</p>
+
+<blockquote>
+<pre>
+<code>
+redirect(url_for('baseball', favteam=team))
+</code>
+</pre>
+</blockquote>
+
+<p>We dynamically generate the URL by providing the endpoint name and the routing parameters.</p>
+
+<p>As it turns out, we can do the same in C#.</p>
+
+<p>First, I would need to update my Render method:</p>
+
+<blockquote>
+<pre>
+<code>
+public string Render(object model, string filePath)
+{
+    var template = Template.Parse(filePath);
+
+    var context = new TemplateContext
+    {
+        MemberRenamer = member =&gt; member.Name
+    };
+    var scriptObject = new ScriptObject();
+
+    if (model != null)
+    {
+        scriptObject.Import(model);
+    }
+
+    scriptObject.Import("url_for", new Func&lt;string, object?[], string&gt;((name, parameters) =&gt; 
+    UrlFor(_linkGenerator, _httpContextAccessor.HttpContext, name, parameters)));
+
+    context.PushGlobal(scriptObject);
+    return template.Render(context);
+}
+</code>
+</pre>
+</blockquote>
+
+<p>The important line here is:</p>
+
+<blockquote>
+<code>
+scriptObject.Import("url_for", new Func&lt;string, object?[], string&gt;((name, parameters) =&gt; 
+UrlFor(_linkGenerator, _httpContextAccessor.HttpContext, name, parameters)));
+</code>
+</blockquote>
+
+<p>We say during the render process, when the engine finds "url_for", it will replace it with the UrlFor method and return the actual endpoint.</p>
+
+<p>Here is the enigmatic UrlFor method:</p>
+
+<blockquote>
+<pre>
+<code>
+private string UrlFor(LinkGenerator linkGenerator, HttpContext httpContext, string endpointName, object?[] providedRouteValues)
+{
+    var endPoint = _dataSource.Endpoints.First(x =&gt; x.Metadata.GetMetadata&lt;EndpointNameMetadata&gt;()?.EndpointName == endpointName);
+    
+    if (endPoint is RouteEndpoint routeEndpoint)
+    {
+        var routeValues = ExtractRouteValues(routeEndpoint.RoutePattern, providedRouteValues);
+        
+        if (routeValues.Count() != providedRouteValues.Length)
+        {
+            throw new ArgumentException(
+                $"Endpoint ({endpointName}'s expected route values({routeValues.Count}) 
+                don't match provided route values({providedRouteValues.Length})");
+        }
+        
+        var newPath = linkGenerator.GetPathByName(httpContext, endpointName, routeValues);
+        return newPath;
+    }
+    
+    return null;
+}
+</code>
+</pre>
+</blockquote>
+
+<p>We find the endpoint by its friendly name, create a dictionary of route values, and leave the LinkGenerator injected instance to get the endpoint for us. That would allow us to update our original endpoint:</p>
+
+<p>From this:</p>
+
+<blockquote>
+<pre>
+<code>
+app.MapGet("/ExampleUrl", (ITemplateParser parser, HttpContext context) =&gt;
+{
+    var template = $"&lt;a href=&quot;/examples/{23}&quot;&gt;Hardcoded url&lt;/a&gt;";
+    var templateText = parser.Render(new { }, template);
+    context.Response.ContentType = "text/html";
+    context.Response.WriteAsync(templateText);
+});
+</code>
+</pre>
+</blockquote>
+
+<p>To this:</p>
+
+<blockquote>
+<pre>
+<code>
+app.MapGet("/GetUrl", (ITemplateParser parser, HttpContext context) =&gt;
+{
+    var template = @"&lt;a href=&quot;{{url_for 'GetExamplesUrlFor' 23}}&quot;&gt;The href was generated using our custom url_for&lt;/a&gt;";
+    var templateText = parser.Render(new { }, template);
+    context.Response.ContentType = "text/html";
+    context.Response.WriteAsync(templateText);
+});
+</code>
+</pre>
+</blockquote>
+
+<p>I hope this has been helpful. The full codebase can be found <a href="https://github.com/art3xias23/blog-2-csharp-urlfor">here</a>.</p>
+

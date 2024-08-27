@@ -1,0 +1,54 @@
+<p>Here is how I configured nginx on an Ubuntu server to host a Go application.</p>
+
+<ul>
+    <li>
+        <p>Sign in to the server using ssh</p>
+        <pre><code class="language-plaintext">ssh user@server_ip</code></pre>
+    </li>
+    <li>
+        <p>Systemd</p>
+        <ul>
+            <li>Systemd is a system and service manager on Linux which dictates what programs will run.</li>
+            <li>Systemd can run systems in parallel.</li>
+            <li>It can start services when needed, not only at boot time.</li>
+            <li>It understands dependencies between services and starts them in the correct order.</li>
+            <li>A service is started via a service file located in <i><strong>/lib/systemd/system/my.service</strong></i></li>
+        </ul>
+    </li>
+    <li>
+        <p>Create a system service file</p>
+        <pre><code class="language-plaintext">vim /lib/systemd/system/goapp.service</code></pre>
+        <p>with the contents</p>
+        <pre><code class="language-plaintext">[Unit]
+Description=goapp
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=/dir/to/go/executable/go-app
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    </li>
+    <li>
+        <p>Build the Go app</p>
+        <ul>
+            <li>If building for Linux from a Windows machine, set up these settings prior to building.</li>
+        </ul>
+        <pre><code class="language-plaintext">GOOS=linux
+GOARCH=amd64
+go build -o go-app</code></pre>
+    </li>
+    <li>
+        <p>Use the scp utility to upload from your local computer to the remote server</p>
+        <pre><code class="language-plaintext">scp ./go-app user@server_ip:~/dir/to/go/executable/</code></pre>
+    </li>
+    <li>
+        <p>If this is not the first time uploading the executable to the server and you are actually making an update, run the following commands on the server:</p>
+        <pre><code class="language-plaintext">sudo systemctl daemon-reload
+sudo systemctl restart goapp
+sudo systemctl status goapp</code></pre>
+    </li>
+</ul>
+
